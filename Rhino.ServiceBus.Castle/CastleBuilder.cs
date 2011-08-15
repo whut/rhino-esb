@@ -123,16 +123,22 @@ namespace Rhino.ServiceBus.Castle
         public void RegisterPrimaryLoadBalancer()
         {
             var loadBalancerConfig = (LoadBalancerConfiguration) config;
+
+            var dependencies = new Dictionary<string, object>()
+            {
+                {"endpoint", loadBalancerConfig.Endpoint},
+                {"threadCount", loadBalancerConfig.ThreadCount},
+                {"transactional",loadBalancerConfig.Transactional}
+            };
+            if (loadBalancerConfig.SecondaryLoadBalancer != null)
+            {
+                dependencies.Add("secondaryLoadBalancer", loadBalancerConfig.SecondaryLoadBalancer);
+            }
+
             container.Register(Component.For<MsmqLoadBalancer, IStartable>()
                                    .ImplementedBy(loadBalancerConfig.LoadBalancerType)
                                    .LifeStyle.Is(LifestyleType.Singleton)
-                                   .DependsOn(new
-                                   {
-                                       endpoint = loadBalancerConfig.Endpoint,
-                                       threadCount = loadBalancerConfig.ThreadCount,
-                                       primaryLoadBalancer = loadBalancerConfig.PrimaryLoadBalancer,
-                                       transactional = loadBalancerConfig.Transactional
-                                   }));
+                                   .DependsOn(dependencies));
 
             container.Register(
                 Component.For<IDeploymentAction>()
@@ -143,7 +149,7 @@ namespace Rhino.ServiceBus.Castle
         public void RegisterSecondaryLoadBalancer()
         {
             var loadBalancerConfig = (LoadBalancerConfiguration) config;
-            container.Register(Component.For<MsmqLoadBalancer>()
+            container.Register(Component.For<MsmqLoadBalancer, IStartable>()
                                        .ImplementedBy(loadBalancerConfig.LoadBalancerType)
                                        .LifeStyle.Is(LifestyleType.Singleton)
                                        .DependsOn(new
@@ -152,7 +158,6 @@ namespace Rhino.ServiceBus.Castle
                                            threadCount = loadBalancerConfig.ThreadCount,
                                            primaryLoadBalancer = loadBalancerConfig.PrimaryLoadBalancer,
                                            transactional = loadBalancerConfig.Transactional,
-                                           secondaryLoadBalancer = loadBalancerConfig.SecondaryLoadBalancer,
                                        }));
 
             container.Register(

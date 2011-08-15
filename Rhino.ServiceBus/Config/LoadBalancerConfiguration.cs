@@ -10,7 +10,7 @@ namespace Rhino.ServiceBus.Config
             var loadBalancerConfig = config as LoadBalancer.LoadBalancerConfiguration;
             if (loadBalancerConfig == null)
                 return;
-            if (loadBalancerConfig.SecondaryLoadBalancer != null)
+            if (loadBalancerConfig.PrimaryLoadBalancer != null)
             {
                 builder.RegisterSecondaryLoadBalancer();
             }
